@@ -100,10 +100,16 @@ export class VideoProcessor {
         processingTimeMs: Date.now() - startTime
       });
 
-      // Cleanup on error
-      if (context?.tempDir) {
+      // Only cleanup if error occurred BEFORE video processing completed
+      // Don't delete the final video if upload failed - preserve it for retry
+      if (context?.tempDir && !(error instanceof ProcessingError && error.stage === ProcessingStage.OUTPUT_UPLOAD)) {
         await this.fileManager.cleanupDirectory(context.tempDir).catch(() => {
           // Ignore cleanup errors during error handling
+        });
+      } else if (error instanceof ProcessingError && error.stage === ProcessingStage.OUTPUT_UPLOAD) {
+        this.logger.warn('Upload failed - preserving video file for manual retry', {
+          outputFile: context?.localFiles.outputFile,
+          tempDir: context?.tempDir
         });
       }
 
