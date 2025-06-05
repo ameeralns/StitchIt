@@ -220,8 +220,9 @@ export class VideoProcessor {
       await this.fileManager.cleanupDirectory(context.tempDir);
 
       // Delete source assets from Vercel Blob (but keep the song)
-      const videoClipUrls = context.request.videoClips.map(clip => clip.url);
-      await this.blobService.deleteInputAssets(videoClipUrls, context.request.assFile.url);
+      // DISABLED FOR TESTING: Keep input assets in blob storage
+      // const videoClipUrls = context.request.videoClips.map(clip => clip.url);
+      // await this.blobService.deleteInputAssets(videoClipUrls, context.request.assFile.url);
 
       this.logger.logStage('Cleanup', 'complete');
 

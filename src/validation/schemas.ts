@@ -26,12 +26,12 @@ export const processVideoRequestSchema = Joi.object({
     .pattern(/^https:\/\/.*\.(mp3|wav|aac|m4a)$/, 'Song URL must be a valid HTTPS URL pointing to an audio file'),
   
   songId: Joi.string()
-    .alphanum()
+    .pattern(/^[a-zA-Z0-9-]+$/)
     .min(3)
     .max(50)
     .required()
     .messages({ 
-      'string.alphanum': 'Song ID must be alphanumeric',
+      'string.pattern.base': 'Song ID must contain only letters, numbers, and hyphens',
       'string.min': 'Song ID must be between 3-50 characters',
       'string.max': 'Song ID must be between 3-50 characters'
     }),

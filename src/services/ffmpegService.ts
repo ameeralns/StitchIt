@@ -139,14 +139,14 @@ export class FFmpegService {
         // Add ASS subtitle input
         command = command.input(localFiles.assFile);
 
-        // Apply filter complex
-        command = command.complexFilter(filterComplex, ['vout']);
+        // Apply filter complex (don't specify output mapping here, do it manually)
+        command = command.complexFilter(filterComplex);
 
         // Map outputs
         command = command
           .outputOptions([
             '-map', '[vout]',  // Use processed video
-            `-map`, `${localFiles.videoClips.length}:a`, // Use song audio (not clip audio)
+            '-map', `${localFiles.videoClips.length}:a`, // Use song audio (not clip audio)
             '-c:v', 'libx264',
             '-preset', 'medium',
             '-crf', '23',
