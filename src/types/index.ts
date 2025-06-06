@@ -15,6 +15,8 @@ export interface ProcessVideoRequest {
   songTitle?: string;
   outputAspectRatio: '9:16' | '16:9';
   transitionDuration?: number;
+  compressionLevel?: 'balanced' | 'high' | 'maximum';
+  audioBitrate?: number;
 }
 
 export interface ProcessVideoResponse {

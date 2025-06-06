@@ -53,6 +53,22 @@ export const processVideoRequestSchema = Joi.object({
     .messages({ 
       'number.min': 'Transition duration must be between 0.1 and 5.0 seconds',
       'number.max': 'Transition duration must be between 0.1 and 5.0 seconds'
+    }),
+
+  compressionLevel: Joi.string()
+    .valid('balanced', 'high', 'maximum')
+    .default('high')
+    .optional()
+    .messages({ 'any.only': 'Compression level must be one of: balanced, high, maximum' }),
+
+  audioBitrate: Joi.number()
+    .min(64)
+    .max(320)
+    .default(96)
+    .optional()
+    .messages({ 
+      'number.min': 'Audio bitrate must be between 64-320 kbps',
+      'number.max': 'Audio bitrate must be between 64-320 kbps'
     })
 });
 

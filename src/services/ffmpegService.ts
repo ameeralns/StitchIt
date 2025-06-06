@@ -125,6 +125,19 @@ export class FFmpegService {
         const { localFiles, metadata, request } = context;
         const filterComplex = this.buildFilterComplex(context);
 
+        // Determine compression settings based on request
+        const compressionLevel = request.compressionLevel || 'high';
+        const audioBitrate = request.audioBitrate || 96;
+        
+        // Compression level settings (same resolution, different quality/size tradeoffs)
+        const compressionSettings = {
+          balanced: { crf: '25', preset: 'medium' },
+          high: { crf: '28', preset: 'slower' },
+          maximum: { crf: '32', preset: 'veryslow' }
+        };
+        
+        const settings = compressionSettings[compressionLevel];
+
         // Create FFmpeg command
         let command = ffmpeg();
 
@@ -142,20 +155,33 @@ export class FFmpegService {
         // Apply filter complex (don't specify output mapping here, do it manually)
         command = command.complexFilter(filterComplex);
 
-        // Map outputs
+        // Map outputs with dynamic settings
         command = command
           .outputOptions([
             '-map', '[vout]',  // Use processed video
             '-map', `${localFiles.videoClips.length}:a`, // Use song audio (not clip audio)
             '-c:v', 'libx264',
-            '-preset', 'medium',
-            '-crf', '23',
+            '-preset', settings.preset,
+            '-crf', settings.crf,
+            '-profile:v', 'high', // Use high profile for better compression
+            '-level', '4.1',      // Compatibility level
+            '-pix_fmt', 'yuv420p', // Ensure compatibility
+            '-x264-params', 'me=umh:subme=8:ref=3:bframes=3:b-adapt=2:direct=auto:weightb=1:analyse=all:8x8dct=1:trellis=2:fast-pskip=0:mixed-refs=1', // Advanced x264 settings
             '-c:a', 'aac',
-            '-b:a', '128k',
+            '-b:a', `${audioBitrate}k`,
+            '-ac', '2',           // Stereo audio
+            '-ar', '44100',       // Audio sample rate
             '-movflags', '+faststart',
             '-t', metadata.songDuration.toString() // Trim to song duration
           ])
           .output(localFiles.outputFile);
+
+        this.logger.info('Using compression settings', { 
+          compressionLevel,
+          crf: settings.crf,
+          preset: settings.preset,
+          audioBitrate: `${audioBitrate}k`
+        });
 
         // Set up event handlers
         command.on('start', (commandLine: string) => {
