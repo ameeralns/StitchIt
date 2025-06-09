@@ -59,6 +59,9 @@ Edit `.env` file with your configuration:
 # Required: Vercel Blob Storage Token
 BLOB_READ_WRITE_TOKEN=your_vercel_blob_token_here
 
+# Required: API Key for authentication
+X_API_KEY=your_secure_api_key_here
+
 # Optional: Server Configuration
 PORT=8080
 NODE_ENV=development
@@ -88,9 +91,35 @@ Make sure you have FFmpeg installed on your system:
 
 ## 📋 API Reference
 
+### Authentication
+
+All endpoints except `/health` require authentication using an API key.
+
+**Headers:**
+- `X-API-Key`: Your API key (configured via `X_API_KEY` environment variable)
+- `Content-Type`: `application/json`
+
+**Authentication Errors:**
+
+```json
+{
+  "status": "failed",
+  "error": {
+    "code": "UNAUTHORIZED",
+    "message": "API key required", // or "Invalid API key"
+    "details": "Please provide a valid X-API-Key header",
+    "stage": "authentication"
+  }
+}
+```
+
 ### POST /process-video
 
 Processes video clips, applies subtitles, and creates a final music video.
+
+**Headers:**
+- `X-API-Key`: Required - Your API key
+- `Content-Type`: `application/json`
 
 **Request Body:**
 
@@ -145,7 +174,7 @@ Processes video clips, applies subtitles, and creates a final music video.
 
 ### GET /health
 
-Health check endpoint for monitoring.
+Health check endpoint for monitoring. **No authentication required.**
 
 **Response (200):**
 
@@ -174,7 +203,10 @@ export const processVideoWorkflow = inngest.createFunction(
     const result = await step.run("ffmpeg-processing", async () => {
       const response = await fetch(`${FFMPEG_SERVICE_URL}/process-video`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { 
+          "Content-Type": "application/json",
+          "X-API-Key": process.env.FFMPEG_API_KEY 
+        },
         body: JSON.stringify(event.data),
         timeout: 600000 // 10 minute timeout
       });
@@ -311,6 +343,7 @@ LOG_LEVEL=debug npm start
 ```bash
 curl -X POST http://localhost:8080/process-video \
   -H "Content-Type: application/json" \
+  -H "X-API-Key: your_api_key_here" \
   -d '{
     "videoClips": [
       {"url": "https://blob-url/clip1.mp4", "duration": 8},
@@ -328,7 +361,10 @@ curl -X POST http://localhost:8080/process-video \
 ```javascript
 const response = await fetch('http://localhost:8080/process-video', {
   method: 'POST',
-  headers: { 'Content-Type': 'application/json' },
+  headers: { 
+    'Content-Type': 'application/json',
+    'X-API-Key': 'your_api_key_here'
+  },
   body: JSON.stringify({
     videoClips: [
       { url: 'https://blob-url/clip1.mp4', duration: 8 },
