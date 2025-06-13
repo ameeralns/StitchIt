@@ -60,7 +60,8 @@ export class VideoProcessor {
       // Update context with local file paths
       context.localFiles = {
         ...localFiles,
-        outputFile: path.join(context.tempDir, 'final_video.mp4')
+        outputFile: path.join(context.tempDir, 'final_video.mp4'),
+        thumbnailFile: path.join(context.tempDir, 'thumbnail.jpg')
       };
 
       // Step 5: Extract metadata
@@ -69,17 +70,27 @@ export class VideoProcessor {
       // Step 6: Process video with FFmpeg
       await this.ffmpegService.processVideo(context);
 
-      // Step 7: Upload to Vercel Blob
-      const outputUrl = await this.uploadOutput(context);
+      // Step 7: Generate thumbnail
+      await this.ffmpegService.generateThumbnail(
+        context.localFiles.outputFile,
+        context.localFiles.thumbnailFile
+      );
 
-      // Step 8: Cleanup and delete source assets
+      // Step 8: Upload video and thumbnail to Vercel Blob
+      const [outputUrl, thumbnailUrl] = await Promise.all([
+        this.uploadOutput(context),
+        this.uploadThumbnail(context)
+      ]);
+
+      // Step 9: Cleanup and delete source assets
       await this.cleanup(context);
 
-      // Step 9: Generate response
+      // Step 10: Generate response
       const processingTimeMs = Date.now() - startTime;
       const response: ProcessVideoResponse = {
         status: 'completed',
         outputUrl,
+        thumbnailUrl,
         duration: context.metadata.songDuration,
         message: 'Video processed successfully.',
         processingTimeMs
@@ -160,7 +171,8 @@ export class VideoProcessor {
         videoClips: [],
         assFile: '',
         songFile: '',
-        outputFile: ''
+        outputFile: '',
+        thumbnailFile: ''
       },
       metadata: {
         songDuration: 0,
@@ -215,6 +227,21 @@ export class VideoProcessor {
       context.localFiles.outputFile,
       blobPath,
       'video/mp4'
+    );
+  }
+
+  private async uploadThumbnail(context: ProcessingContext): Promise<string> {
+    const fileName = this.fileManager.generateFileName(
+      context.request.songId,
+      this.processId,
+      'jpg'
+    );
+    const blobPath = this.fileManager.generateThumbnailBlobPath(context.request.songId, fileName);
+    
+    return await this.blobService.uploadThumbnail(
+      context.localFiles.thumbnailFile,
+      blobPath,
+      'image/jpeg'
     );
   }
 

@@ -164,4 +164,8 @@ export class FileManager {
   generateBlobPath(songId: string, fileName: string): string {
     return `videos/${songId}/${fileName}`;
   }
+
+  generateThumbnailBlobPath(songId: string, fileName: string): string {
+    return `thumbnails/${songId}/${fileName}`;
+  }
 } 

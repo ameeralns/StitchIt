@@ -22,6 +22,7 @@ export interface ProcessVideoRequest {
 export interface ProcessVideoResponse {
   status: 'completed';
   outputUrl: string;
+  thumbnailUrl: string;
   duration: number;
   message: string;
   processingTimeMs: number;
@@ -66,6 +67,7 @@ export interface ProcessingContext {
     assFile: string;
     songFile: string;
     outputFile: string;
+    thumbnailFile: string;
   };
   metadata: {
     songDuration: number;

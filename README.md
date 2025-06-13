@@ -9,6 +9,7 @@ A synchronous FFmpeg-based microservice for automated music video creation, opti
 - **Audio Replacement**: Replace original video audio with provided song tracks
 - **Aspect Ratio Conversion**: Support for both 9:16 (portrait) and 16:9 (landscape) outputs
 - **Automatic Trimming**: Trim final video to match song duration
+- **Thumbnail Generation**: Automatically generate video thumbnails from the 1-second mark
 - **Vercel Blob Integration**: Direct upload to and cleanup from Vercel Blob storage
 - **Comprehensive Logging**: Structured logging for debugging and monitoring
 - **Synchronous Processing**: Perfect for Inngest function integration
@@ -152,6 +153,7 @@ Processes video clips, applies subtitles, and creates a final music video.
 {
   "status": "completed",
   "outputUrl": "https://blob-url/videos/unique-song-123/final_video_abc123.mp4",
+  "thumbnailUrl": "https://blob-url/thumbnails/unique-song-123/final_video_abc123.jpg",
   "duration": 123.45,
   "message": "Video processed successfully.",
   "processingTimeMs": 45000
@@ -379,6 +381,7 @@ const response = await fetch('http://localhost:8080/process-video', {
 
 const result = await response.json();
 console.log('Video URL:', result.outputUrl);
+console.log('Thumbnail URL:', result.thumbnailUrl);
 ```
 
 ## 🔗 Related Documentation

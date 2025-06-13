@@ -70,6 +70,55 @@ export class BlobService {
     }
   }
 
+  async uploadThumbnail(
+    localFilePath: string,
+    blobPath: string,
+    contentType: string = 'image/jpeg'
+  ): Promise<string> {
+    const startTime = Date.now();
+    this.logger.logStage('Thumbnail Upload', 'start', { localFilePath, blobPath });
+
+    try {
+      // Read the file
+      const fileBuffer = await fs.readFile(localFilePath);
+      const fileStats = await fs.stat(localFilePath);
+      
+      this.logger.info('Uploading thumbnail to Vercel Blob', {
+        localFilePath,
+        blobPath,
+        fileSize: fileStats.size,
+        contentType
+      });
+
+      // Upload to Vercel Blob
+      const blob = await put(blobPath, fileBuffer, {
+        access: 'public',
+        token: this.token,
+        contentType
+      });
+
+      this.logger.logTiming('Thumbnail Upload', startTime, {
+        url: blob.url,
+        fileSize: fileStats.size,
+        blobPath
+      });
+
+      return blob.url;
+
+    } catch (error) {
+      this.logger.error('Failed to upload thumbnail to Vercel Blob', error as Error, {
+        localFilePath,
+        blobPath
+      });
+      throw new ProcessingError(
+        ProcessingErrorCode.UPLOAD_FAILED,
+        ProcessingStage.OUTPUT_UPLOAD,
+        'Failed to upload thumbnail to Vercel Blob storage',
+        (error as Error).message
+      );
+    }
+  }
+
   async deleteBlob(url: string, description: string): Promise<void> {
     const startTime = Date.now();
     this.logger.info(`Deleting ${description} from Vercel Blob`, { url });

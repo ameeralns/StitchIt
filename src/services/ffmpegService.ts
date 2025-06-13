@@ -269,4 +269,60 @@ export class FFmpegService {
       });
     }
   }
+
+  async generateThumbnail(videoFilePath: string, thumbnailFilePath: string): Promise<void> {
+    const startTime = Date.now();
+    this.logger.logStage('Thumbnail Generation', 'start', { 
+      videoFilePath, 
+      thumbnailFilePath 
+    });
+
+    return new Promise((resolve, reject) => {
+      try {
+        const command = ffmpeg(videoFilePath)
+          .seekInput(1) // Seek to 1 second
+          .frames(1) // Extract only 1 frame
+          .size('1280x720') // Standard thumbnail size
+          .format('image2')
+          .output(thumbnailFilePath);
+
+        command.on('start', (commandLine: string) => {
+          this.logger.info('FFmpeg thumbnail command started', { commandLine });
+        });
+
+        command.on('error', (error: any) => {
+          this.logger.error('FFmpeg thumbnail generation failed', error, {
+            videoFilePath,
+            thumbnailFilePath
+          });
+          reject(new ProcessingError(
+            ProcessingErrorCode.FFMPEG_PROCESSING_ERROR,
+            ProcessingStage.VIDEO_PROCESSING,
+            'FFmpeg thumbnail generation failed',
+            error.message
+          ));
+        });
+
+        command.on('end', () => {
+          this.logger.logTiming('Thumbnail Generation', startTime, {
+            videoFilePath,
+            thumbnailFilePath
+          });
+          resolve();
+        });
+
+        // Start processing
+        command.run();
+
+      } catch (error) {
+        this.logger.error('Failed to start FFmpeg thumbnail generation', error as Error);
+        reject(new ProcessingError(
+          ProcessingErrorCode.FFMPEG_PROCESSING_ERROR,
+          ProcessingStage.VIDEO_PROCESSING,
+          'Failed to start FFmpeg thumbnail generation',
+          (error as Error).message
+        ));
+      }
+    });
+  }
 } 

@@ -80,6 +80,7 @@ The API will process the entire video synchronously and only respond after compl
 {
   "status": "completed",
   "outputUrl": "https://<vercel-blob-url>/videos/unique-song-identifier-123/final_video_xyz-456.mp4",
+  "thumbnailUrl": "https://<vercel-blob-url>/thumbnails/unique-song-identifier-123/final_video_xyz-456.jpg",
   "duration": 123.45, // Final video duration in seconds
   "message": "Video processed successfully.",
   "processingTimeMs": 45000 // Time taken for processing in milliseconds
@@ -136,8 +137,10 @@ The microservice will perform the following steps sequentially within the single
     *   Error handling: If FFmpeg fails, clean up temporary files and return detailed error response.
 
 6.  **Output Upload:**
+    *   Generate a thumbnail from the final video at the 1-second mark as a JPEG image.
     *   Upload the generated video to Vercel Blob Storage at path: `videos/<songId>/final_video_<processId>.mp4`
-    *   Verify successful upload and obtain public URL.
+    *   Upload the generated thumbnail to Vercel Blob Storage at path: `thumbnails/<songId>/final_video_<processId>.jpg`
+    *   Verify successful uploads and obtain public URLs.
     *   Error handling: If upload fails, clean up and return a `failed` response.
 
 7.  **Cleanup:**
