@@ -113,7 +113,8 @@ app.post('/process-video', authenticateApiKey, async (req, res) => {
     logger.info('Video processing request completed successfully', {
       requestId,
       processingTime,
-      outputUrl: result.outputUrl,
+      muxAssetId: result.muxAssetId,
+      muxPlaybackId: result.muxPlaybackId,
       duration: result.duration
     });
 

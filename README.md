@@ -152,8 +152,8 @@ Processes video clips, applies subtitles, and creates a final music video.
 ```json
 {
   "status": "completed",
-  "outputUrl": "https://blob-url/videos/unique-song-123/final_video_abc123.mp4",
-  "thumbnailUrl": "https://blob-url/thumbnails/unique-song-123/final_video_abc123.jpg",
+  "muxAssetId": "abc123-def456-ghi789",
+  "muxPlaybackId": "xyz789-uvw456-rst123",
   "duration": 123.45,
   "message": "Video processed successfully.",
   "processingTimeMs": 45000
@@ -225,7 +225,39 @@ export const processVideoWorkflow = inngest.createFunction(
 );
 ```
 
+## 🎥 Mux Integration
 
+This service integrates with [Mux](https://mux.com) for optimized video streaming and delivery. After processing, videos are uploaded to both:
+
+1. **Vercel Blob Storage** - For backup and direct access
+2. **Mux Video Platform** - For optimized streaming with adaptive bitrates
+
+### Mux Setup
+
+1. Create a Mux account at [mux.com](https://mux.com)
+2. Generate API credentials in your Mux dashboard
+3. Add your credentials to the environment variables:
+
+```bash
+MUX_TOKEN_ID=your_mux_token_id_here
+MUX_TOKEN_SECRET=your_mux_token_secret_here
+```
+
+### Playback
+
+With the Mux playback ID returned from the API, you can:
+
+- **HLS Streaming**: `https://stream.mux.com/{playbackId}.m3u8`
+- **MP4 Download**: `https://stream.mux.com/{playbackId}.mp4`
+- **Thumbnails**: `https://image.mux.com/{playbackId}/thumbnail.jpg`
+- **Animated GIFs**: `https://image.mux.com/{playbackId}/animated.gif`
+
+### Benefits
+
+- **Adaptive Streaming**: Automatically adjusts quality based on viewer's connection
+- **Global CDN**: Fast delivery worldwide
+- **Analytics**: Built-in video performance metrics
+- **Thumbnails & GIFs**: Automatic generation of preview media
 
 ## 🔧 Configuration
 

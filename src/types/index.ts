@@ -21,8 +21,8 @@ export interface ProcessVideoRequest {
 
 export interface ProcessVideoResponse {
   status: 'completed';
-  outputUrl: string;
-  thumbnailUrl: string;
+  muxAssetId: string;
+  muxPlaybackId: string;
   duration: number;
   message: string;
   processingTimeMs: number;

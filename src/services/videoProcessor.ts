@@ -4,6 +4,7 @@ import { ProcessLogger } from '../utils/logger';
 import { FileManager } from './fileManager';
 import { FFmpegService } from './ffmpegService';
 import { BlobService } from './blobService';
+import { MuxService } from './muxService';
 import { validateProcessVideoRequest } from '../validation/schemas';
 import {
   ProcessVideoRequest,
@@ -20,6 +21,7 @@ export class VideoProcessor {
   private fileManager: FileManager;
   private ffmpegService: FFmpegService;
   private blobService: BlobService;
+  private muxService: MuxService;
 
   constructor() {
     this.processId = uuidv4();
@@ -27,6 +29,7 @@ export class VideoProcessor {
     this.fileManager = new FileManager(this.processId);
     this.ffmpegService = new FFmpegService(this.processId);
     this.blobService = new BlobService(this.processId);
+    this.muxService = new MuxService(this.processId);
   }
 
   async processVideo(requestData: any): Promise<ProcessVideoResponse> {
@@ -76,10 +79,11 @@ export class VideoProcessor {
         context.localFiles.thumbnailFile
       );
 
-      // Step 8: Upload video and thumbnail to Vercel Blob
-      const [outputUrl, thumbnailUrl] = await Promise.all([
+      // Step 8: Upload video and thumbnail to Vercel Blob & video to Mux
+      const [outputUrl, thumbnailUrl, muxResult] = await Promise.all([
         this.uploadOutput(context),
-        this.uploadThumbnail(context)
+        this.uploadThumbnail(context),
+        this.uploadToMux(context)
       ]);
 
       // Step 9: Cleanup and delete source assets
@@ -89,8 +93,8 @@ export class VideoProcessor {
       const processingTimeMs = Date.now() - startTime;
       const response: ProcessVideoResponse = {
         status: 'completed',
-        outputUrl,
-        thumbnailUrl,
+        muxAssetId: muxResult.assetId,
+        muxPlaybackId: muxResult.playbackId,
         duration: context.metadata.songDuration,
         message: 'Video processed successfully.',
         processingTimeMs
@@ -99,7 +103,8 @@ export class VideoProcessor {
       this.logger.info('Video processing completed successfully', {
         processId: this.processId,
         processingTimeMs,
-        outputUrl,
+        muxAssetId: muxResult.assetId,
+        muxPlaybackId: muxResult.playbackId,
         duration: context.metadata.songDuration
       });
 
@@ -242,6 +247,15 @@ export class VideoProcessor {
       context.localFiles.thumbnailFile,
       blobPath,
       'image/jpeg'
+    );
+  }
+
+  private async uploadToMux(context: ProcessingContext) {
+    return await this.muxService.uploadVideo(
+      context.localFiles.outputFile,
+      context.request.songId,
+      this.processId,
+      context.request.songTitle
     );
   }
 
